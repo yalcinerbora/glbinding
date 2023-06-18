@@ -1,15 +1,15 @@
 
-# 
+#
 # Configuration for all sub-projects
-# 
+#
 
 # Generate version-header
 configure_file(version.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/${META_PROJECT_NAME}/${META_PROJECT_NAME}-version.h)
 
 
-# 
+#
 # Sub-projects
-# 
+#
 
 # 3rdParties
 set(IDE_FOLDER "3rdparty")
@@ -18,7 +18,10 @@ add_subdirectory("3rdparty/KHR")
 # Libraries
 set(IDE_FOLDER "")
 add_subdirectory(glbinding)
-add_subdirectory(glbinding-aux)
+
+if(NOT ${OPTION_SKIP_GLBINDING_AUX})
+    add_subdirectory(glbinding-aux)
+endif()
 
 # Tools
 if(OPTION_BUILD_TOOLS)
@@ -39,9 +42,9 @@ if(OPTION_BUILD_TESTS AND NOT MINGW)
 endif()
 
 
-# 
+#
 # Deployment
-# 
+#
 
 # Deploy generated headers
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/${META_PROJECT_NAME} DESTINATION include COMPONENT dev)

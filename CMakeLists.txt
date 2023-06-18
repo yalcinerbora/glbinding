@@ -1,7 +1,7 @@
 
-# 
+#
 # CMake options
-# 
+#
 
 # CMake version
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
@@ -39,6 +39,7 @@ set_policy(CMP0077 NEW) # ENABLE CMP0077: option() honors normal variables.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(GenerateExportHeader)
+include(GNUInstallDirs)
 
 set(WriterCompilerDetectionHeaderFound NOTFOUND)
 # This module is only available with CMake >=3.1, so check whether it could be found
@@ -57,9 +58,9 @@ include(cmake/HealthCheck.cmake)
 include(cmake/GenerateTemplateExportHeader.cmake)
 
 
-# 
+#
 # Project description and (meta) information
-# 
+#
 
 # Meta information about the project
 set(META_PROJECT_NAME        "glbinding")
@@ -75,12 +76,15 @@ set(META_VERSION             "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META
 set(META_NAME_VERSION        "${META_PROJECT_NAME} v${META_VERSION} (${META_VERSION_REVISION})")
 set(META_CMAKE_INIT_SHA      "c472829f01df4c99c7bd3fa96bcf6854b3dd44f1")
 
+# CMake config
+set(GLBINDING_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${target})
+
 string(MAKE_C_IDENTIFIER ${META_PROJECT_NAME} META_PROJECT_ID)
 string(TOUPPER ${META_PROJECT_ID} META_PROJECT_ID)
 
-# 
+#
 # Project configuration options
-# 
+#
 
 # Project options
 option(BUILD_SHARED_LIBS              "Build shared instead of static libraries."                 ON)
@@ -94,11 +98,13 @@ option(OPTION_BUILD_CHECK             "Enable source code check targets"        
 option(OPTION_BUILD_OWN_KHR_HEADERS   "Build and deploy glbinding with in-source KHR headers."    OFF)
 option(OPTION_BUILD_WITH_LTO          "Build with Link-time Optimization (may break AppleClang)"  OFF)
 option(OPTION_USE_GIT_INFORMATION     "Fetches commit information from the git source repository" ON)
+option(OPTION_SKIP_GLBINDING_AUX      "Do not build/install glbindings-aux"                       OFF)
+option(OPTION_ONLY_INSTALL_LARGE_HEADER "Only install glbinding/gl header"                        OFF)
 
 
-# 
+#
 # Declare project
-# 
+#
 
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -128,9 +134,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 file(WRITE "${PROJECT_BINARY_DIR}/VERSION" "${META_NAME_VERSION}")
 
 
-# 
+#
 # Compiler settings and options
-# 
+#
 
 include(cmake/CompileOptions.cmake)
 
@@ -149,9 +155,9 @@ if(OPTION_BUILD_CHECK)
 endif()
 
 
-# 
+#
 # Deployment/installation setup
-# 
+#
 
 # Get project name
 set(project ${META_PROJECT_NAME})
@@ -210,30 +216,29 @@ if(NOT SYSTEM_DIR_INSTALL)
 endif()
 
 
-# 
+#
 # Project modules
-# 
+#
 
 add_subdirectory(source)
 add_subdirectory(docs)
 add_subdirectory(deploy)
 
 
-# 
+#
 # Deployment (global project files)
-# 
+#
 
 # Install version file
-install(FILES "${PROJECT_BINARY_DIR}/VERSION" DESTINATION ${INSTALL_ROOT} COMPONENT runtime)
+install(FILES "${PROJECT_BINARY_DIR}/VERSION" DESTINATION ${GLBINDING_CONFIG_DIR} COMPONENT runtime)
 
 # Install cmake find script for the project
-install(FILES ${META_PROJECT_NAME}-config.cmake DESTINATION ${INSTALL_ROOT} COMPONENT dev)
-install(FILES cmake/FindKHR.cmake DESTINATION ${INSTALL_CMAKE} COMPONENT dev)
+install(FILES cmake/FindKHR.cmake DESTINATION ${GLBINDING_CONFIG_DIR} COMPONENT dev)
 
 # Install the project meta files
-install(FILES AUTHORS   DESTINATION ${INSTALL_ROOT} COMPONENT runtime)
-install(FILES LICENSE   DESTINATION ${INSTALL_ROOT} COMPONENT runtime)
-install(FILES README.md DESTINATION ${INSTALL_ROOT} COMPONENT runtime)
+install(FILES AUTHORS   DESTINATION ${GLBINDING_CONFIG_DIR} COMPONENT runtime)
+install(FILES LICENSE   DESTINATION ${GLBINDING_CONFIG_DIR} COMPONENT runtime)
+install(FILES README.md DESTINATION ${GLBINDING_CONFIG_DIR} COMPONENT runtime)
 
 # Install runtime data
 if (TARGET cubescape OR TARGET cubescape-log OR TARGET cubescape-qt)

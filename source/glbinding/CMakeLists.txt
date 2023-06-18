@@ -1,7 +1,7 @@
 
-# 
+#
 # External dependencies
-# 
+#
 
 # find_package(OpenGL REQUIRED)
 find_package(KHR QUIET)
@@ -16,10 +16,10 @@ set(ADDITIONAL_LIBRARIES)
 set(ADDITIONAL_INCLUDES)
 if(OPTION_BUILD_WITH_BOOST_THREAD)
     find_package(Boost COMPONENTS thread REQUIRED)
-    
+
     if (Boost_FOUND)
         message(STATUS "Use Boost for thread.")
-        
+
         set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${Boost_LIBRARIES})
         set(ADDITIONAL_INCLUDES ${ADDITIONAL_INCLUDES} ${Boost_INCLUDE_DIRS})
     else()
@@ -29,9 +29,9 @@ if(OPTION_BUILD_WITH_BOOST_THREAD)
 endif()
 
 
-# 
+#
 # Library name and options
-# 
+#
 
 # Target name
 set(target glbinding)
@@ -48,9 +48,9 @@ set(template_export_file "include/${target}/${target}_api.h")
 set(export_macro         "${target_id}_API")
 
 
-# 
+#
 # Sources
-# 
+#
 
 set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/source")
@@ -67,7 +67,7 @@ set(headers
     ${include_path}/gl/types.h
     ${include_path}/gl/types.inl
     ${include_path}/gl/values.h
-    
+
     ${include_path}/glbinding.h
 
     ${include_path}/glbinding.h
@@ -105,8 +105,12 @@ set(headers
 )
 
 # add featured headers
+if(${OPTION_ONLY_INSTALL_LARGE_HEADER})
+    file(GLOB featured_includes ${include_path}/gl/*.h)
+else()
+    file(GLOB featured_includes ${include_path}/gl*/*.h)
+endif()
 
-file(GLOB featured_includes ${include_path}/gl*/*.h)
 list(APPEND headers ${featured_includes})
 
 set(sources
@@ -116,11 +120,11 @@ set(sources
     ${source_path}/Binding_list.cpp
 
     ${source_path}/glbinding.cpp
-    
+
     ${source_path}/gl/functions-patches.cpp
 
     ${source_path}/Binding_pch.h
-    
+
     # KHR binding
     ${source_path}/AbstractFunction.cpp
     ${source_path}/AbstractState.cpp
@@ -136,7 +140,7 @@ set(sources
 file(GLOB splitted_binding_sources ${source_path}/Binding_objects_*.cpp)
 file(GLOB splitted_functions_sources ${source_path}/gl/functions_*.cpp)
 
-list(APPEND sources 
+list(APPEND sources
     ${splitted_binding_sources}
     ${splitted_functions_sources}
 )
@@ -152,28 +156,30 @@ endif()
 # Group source files
 set(header_group "Header Files (API)")
 set(source_group "Source Files")
-source_group_by_path(${include_path} "\\\\.h$|\\\\.inl$" 
+source_group_by_path(${include_path} "\\\\.h$|\\\\.inl$"
     ${header_group} ${headers})
-source_group_by_path(${source_path}  "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.inl$" 
+source_group_by_path(${source_path}  "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.inl$"
     ${source_group} ${sources})
 
 
-# 
+#
 # Create library
-# 
+#
 
 # since we use stl and stl is intended to use exceptions, exceptions should not be disabled
 #if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
-    # workaround for removing default flags 
-    # string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) 
+    # workaround for removing default flags
+    # string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #endif ()
 
 
 # Build library
-add_library(${target}
-    ${sources}
-    ${headers}
-)
+add_library(${target} ${sources})
+
+target_sources(${target} PUBLIC
+                FILE_SET HEADERS
+                BASE_DIRS ${include_path} # This is correct?
+                FILES ${headers})
 
 
 # Optional IPO. Do not use IPO if it's not supported by compiler.
@@ -226,23 +232,23 @@ else()
 endif()
 
 
-# 
+#
 # Project options
-# 
+#
 
 set_target_properties(${target}
     PROPERTIES
     ${DEFAULT_PROJECT_OPTIONS}
-    INSTALL_RPATH "${LIBRARY_INSTALL_RPATH}"
+    #INSTALL_RPATH "${LIBRARY_INSTALL_RPATH}"
     FOLDER "${IDE_FOLDER}"
     VERSION "${META_VERSION}"
     SOVERSION "${META_VERSION_MAJOR}"
 )
 
 
-# 
+#
 # Include directories
-# 
+#
 
 target_include_directories(${target}
     PRIVATE
@@ -261,9 +267,9 @@ target_include_directories(${target}
 )
 
 
-# 
+#
 # Libraries
-# 
+#
 
 target_link_libraries(${target}
     PRIVATE
@@ -277,15 +283,15 @@ target_link_libraries(${target}
 )
 
 
-# 
+#
 # Compile definitions
-# 
+#
 
 target_compile_definitions(${target}
     PRIVATE
     # since we use stl and stl is intended to use exceptions, exceptions should not be disabled
     # furthermore, this flag is not officially supported
-    #$<$<CXX_COMPILER_ID:MSVC>:_HAS_EXCEPTIONS=0> 
+    #$<$<CXX_COMPILER_ID:MSVC>:_HAS_EXCEPTIONS=0>
     $<$<AND:$<BOOL:${OPTION_BUILD_WITH_BOOST_THREAD}>,$<BOOL:${Boost_FOUND}>>:GLBINDING_USE_BOOST_THREAD>
 
     PUBLIC
@@ -296,9 +302,9 @@ target_compile_definitions(${target}
 )
 
 
-# 
+#
 # Compile options
-# 
+#
 
 target_compile_options(${target}
     PRIVATE
@@ -308,9 +314,9 @@ target_compile_options(${target}
 )
 
 
-# 
+#
 # Linker options
-# 
+#
 
 target_link_libraries(${target}
     PRIVATE
@@ -353,33 +359,35 @@ perform_health_checks(
 )
 
 
-# 
+#
 # Deployment
-# 
+#
 
 # Library
 install(TARGETS ${target}
-    EXPORT  "${target}-export"            COMPONENT dev
-    RUNTIME DESTINATION ${INSTALL_BIN}    COMPONENT runtime
-    LIBRARY DESTINATION ${INSTALL_SHARED} COMPONENT runtime
-    ARCHIVE DESTINATION ${INSTALL_LIB}    COMPONENT dev
+        EXPORT ${target}Targets
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        FILE_SET HEADERS
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# Header files
-install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/${target} DESTINATION ${INSTALL_INCLUDE}
-    COMPONENT dev
+include(CMakePackageConfigHelpers)
+
+# generate the config file that includes the exports
+configure_package_config_file(${CMAKE_SOURCE_DIR}/glbindingConfig.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/glbindingConfig.cmake"
+        INSTALL_DESTINATION ${GLBINDING_CONFIG_DIR}
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/glbindingConfig.cmake"
+        DESTINATION ${GLBINDING_CONFIG_DIR})
 
 # Generated header files
 install(DIRECTORY
-    ${CMAKE_CURRENT_BINARY_DIR}/include/${target} DESTINATION ${INSTALL_INCLUDE}
-    COMPONENT dev
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/include/${target}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-# CMake config
-install(EXPORT ${target}-export
-    NAMESPACE   ${META_PROJECT_NAME}::
-    DESTINATION ${INSTALL_CMAKE}/${target}
-    COMPONENT   dev
-)
+install(EXPORT ${target}Targets
+    FILE ${target}Targets.cmake
+    DESTINATION ${GLBINDING_CONFIG_DIR})

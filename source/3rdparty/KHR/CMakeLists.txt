@@ -114,27 +114,22 @@ target_include_directories(${target}
 # )
 
 
-# 
+#
 # Deployment
-# 
+#
 
 # Library
 install(TARGETS ${target}
-    EXPORT  "${target}-export"            COMPONENT dev
-    RUNTIME DESTINATION ${INSTALL_BIN}    COMPONENT runtime
-    LIBRARY DESTINATION ${INSTALL_SHARED} COMPONENT runtime
-    ARCHIVE DESTINATION ${INSTALL_LIB}    COMPONENT dev
-)
+        EXPORT  ${target}Targets
+        DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # Header files
 install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/KHR DESTINATION ${INSTALL_INCLUDE}/${META_PROJECT_NAME}/3rdparty
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/KHR DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${META_PROJECT_NAME}/3rdparty
     COMPONENT dev
 )
 
 # CMake config
-install(EXPORT ${target}-export
-    NAMESPACE   ${META_PROJECT_NAME}::
-    DESTINATION ${INSTALL_CMAKE}/${target}
-    COMPONENT   dev
-)
+install(EXPORT ${target}Targets
+        FILE ${target}Targets.cmake
+        DESTINATION ${GLBINDING_CONFIG_DIR})
