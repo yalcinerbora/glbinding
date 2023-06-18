@@ -368,7 +368,7 @@ install(TARGETS ${target}
         EXPORT ${target}Targets
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         FILE_SET HEADERS
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${target}
 )
 
 include(CMakePackageConfigHelpers)
