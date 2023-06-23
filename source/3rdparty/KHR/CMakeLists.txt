@@ -133,3 +133,15 @@ install(DIRECTORY
 install(EXPORT ${target}Targets
         FILE ${target}Targets.cmake
         DESTINATION ${GLBINDING_CONFIG_DIR})
+
+include(CMakePackageConfigHelpers)
+
+# generate the config file that includes the exports
+configure_package_config_file(${CMAKE_SOURCE_DIR}/${target}Config.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake"
+        INSTALL_DESTINATION ${GLBINDING_CONFIG_DIR}
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake"
+        DESTINATION ${GLBINDING_CONFIG_DIR})
